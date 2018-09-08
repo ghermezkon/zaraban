@@ -33,28 +33,29 @@ const styles = StyleSheet.create({
     tabFour: { backgroundColor: 'transparent' },
     tabFive: { backgroundColor: 'transparent' },
     //--------------------Iuput & Item-------------------------------------
-    formRTL:{
+    formRTL: {
         flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center'
     },
-    itemRTL: { flexDirection: 'row-reverse' },
-    inputNumber: {
-        direction: 'rtl',
-        textAlign: 'center',
-        fontFamily: 'font-number'
+    error: {
+        fontSize: 13, color: theme.ERROR_COLOR
     },
-    inputText: {
-        direction: 'rtl',
-        textAlign: 'right',
-        fontFamily: 'font-number'
-    },
-    inputIcon: { color: '#CE93D8', fontSize:18 },
     //-------------------FlatList----------------------------
-    listContainer:{ 
-        justifyContent: 'flex-start',
-        width:'95%',
-        direction: 'rtl',
-        flexDirection: 'row-reverse',
-        borderBottomWidth: 1,
+    listContainer: {
+        elevation: 1,
+        borderRadius: 2,
+        backgroundColor: theme.CONTAINER_COLOR,
+        flex: 1,
+        flexDirection: 'row-reverse',  // main axis
+        justifyContent: 'flex-start', // main axis
+        alignItems: 'center', // cross axis
+        paddingTop: 10,
+        paddingBottom: 10,
+        paddingLeft: 9,
+        paddingRight: 16,
+        marginLeft: 1,
+        marginRight: 1,
+        marginTop: 0,
+        marginBottom: 6,
     }
 });
 export default styles;

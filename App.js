@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { AppLoading, Font } from 'expo';
 import RootNavigation from './navigation/RootNavigation';
+import { Root } from 'native-base';
 //-----------------------------------------------------------
 export default class App extends React.Component {
   constructor(props) {
@@ -20,7 +21,9 @@ export default class App extends React.Component {
   render() {
     if (!this.state.isReady) return <AppLoading />;
     return (
-      <RootNavigation/>
+      <Root>
+        <RootNavigation />
+      </Root>
     )
   }
 }

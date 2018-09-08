@@ -1,5 +1,5 @@
 import React from 'react';
-import theme from '../styles/theme.global';
+import { theme } from '../index';
 import { View, Modal, StyleSheet } from 'react-native';
 import { UIActivityIndicator } from 'react-native-indicators';
 import { Text } from 'native-base';

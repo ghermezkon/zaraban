@@ -1,144 +1,205 @@
 import React from 'react';
-import getTheme from '../../native-base-theme/components';
-import platform from '../../native-base-theme/variables/platform';
-import globalStyle from '../../styles/global';
-import constant from '../../api/constant'
-import { Container, View, Header, Text, Right, Icon, Title, Left, StyleProvider, Content, Form, Item, Input, Label, Button, } from 'native-base';
-import { StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import ModalSpinner from '../../api/modal.spinner';
 
-import { createIconSetFromIcoMoon } from 'react-native-vector-icons';
-import fontelloConfig from '../../assets/svg/selection.json';
-const IconMoon = createIconSetFromIcoMoon(fontelloConfig);
+import { Container, View, Text, Icon, StyleProvider, Content, Label, Button, Card, CardItem } from 'native-base';
+import { StyleSheet, TouchableOpacity, TouchableWithoutFeedback, FlatList } from 'react-native';
 
+import {
+    MaterialInput, MaterialToast, getTheme, platform, IconMoon, MaterialHeader,
+    MaterialListHeader, constant, httpApi, ModalSpinner, validator, theme, globalStyle
+} from '../../index';
+import _ from 'lodash';
 //-------------------------------------------------
-export default class Ostan extends React.Component {
+export default class Ostan extends React.PureComponent {
     //---------------------------------------------    
     constructor(props) {
         super(props);
+        this.save = this.save.bind(this);
         this.state = {
+            _id: '',
             ostan_code: '',
             ostan_name: '',
-            ostans: [],
+
+            dataList: [],
             isLoading: true,
+            ostan_code_error: null,
+            ostan_name_error: null,
+            row_index: -1,
+            full_list: ''
         }
     }
-    componentDidMount() {
+    //---------------------------------------------
+    componentWillMount() {
         this.getAll();
     }
     //---------------------------------------------
-    getAll = () => {
-        fetch('http://82.102.10.253:5001/api/zaraban_init/ostan').then((res) => res.json()).then((resJSON) => {
-            this.setState({ ostans: resJSON, isLoading: false })
+    getAll() {
+        fetch(httpApi.get_all_ostan).then((res) => res.json()).then((resJSON) => {
+            this.setState({ dataList: resJSON, isLoading: false })
         })
     }
-    save = () => {
-        fetch('http://82.102.10.253:5001/api/zaraban_init/', {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                ostan_code: this.state.ostan_code,
-                ostan_name: this.state.ostan_name
+    //---------------------------------------------
+    save() {
+        if (this.state.row_index != -1) {
+            this.edit();
+        }
+        else {
+            if (this.state.ostan_code == '' || this.state.ostan_name == '') {
+                MaterialToast(constant.FORM_INVALID, 'danger')
+            } else {
+                let find_index = this.state.dataList.findIndex(el => el.ostan_code == this.state.ostan_code
+                    || el.ostan_name == this.state.ostan_name);
+                if (find_index != -1) {
+                    MaterialToast(constant.DOUBLE_RECORD, 'warning');
+                } else {
+                    this.setState({ isLoading: true });
+                    fetch(httpApi.save, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            ostan_code: this.state.ostan_code,
+                            ostan_name: this.state.ostan_name
+                        })
+                    }).then((res) => res.json()).then((resJSON) => {
+                        this.setState({ dataList: [...this.state.dataList, resJSON.ops[0]] }, function () { this.resetForm() });
+                        MaterialToast(constant.SAVE_OK_MSG, 'success')
+                    })
+                }
+            }
+        }
+    }
+    //---------------------------------------------
+    selectRow = (item, index) =>(e) => {
+        this.setState({
+            _id: item._id,
+            ostan_code: item.ostan_code,
+            ostan_name: item.ostan_name,
+            row_index: index
+        })
+    }
+    //---------------------------------------------
+    edit() {
+        let temp_list = [...this.state.dataList];
+
+        let find_index = this.state.dataList.findIndex(el =>
+            el.ostan_code == this.state.ostan_code || el.ostan_name == this.state.ostan_name);
+        if (find_index != -1 && find_index != this.state.row_index) {
+            MaterialToast(constant.DOUBLE_RECORD, 'warning');
+        } else {
+            this.setState({ isLoading: true });
+            fetch(httpApi.save, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    _id: this.state._id,
+                    ostan_code: this.state.ostan_code,
+                    ostan_name: this.state.ostan_name
+                })
+            }).then((res) => res.json()).then((resJSON) => {
+
+                temp_list[this.state.row_index]._id = this.state._id;
+                temp_list[this.state.row_index].ostan_code = this.state.ostan_code;
+                temp_list[this.state.row_index].ostan_name = this.state.ostan_name;
+
+                this.setState({ dataList: [...temp_list] }, function () { this.resetForm() });
+                MaterialToast(constant.UPDATE_OK_MSG, 'success')
             })
-        }).then((res) => res.json()).then((resJSON) => {
-            this.setState({ ostans: [...this.state.ostans, resJSON.ops[0]] })
+        }
+    }
+    //---------------------------------------------
+    resetForm(){
+        this.setState({
+            ostan_code: '',
+            ostan_name: '',
+            ostan_code_error: null,
+            ostan_name_error: null,
+            isLoading: false
         })
     }
-    renderHeader() {
-        return (
-            <Container>
-                <Header searchBar rounded style={{elevation: 0, backgroundColor: '#F8F8F8', marginLeft:13, marginRight:13}}>
-                    <Item>
-                        <Icon name="ios-search" />
-                        <Input placeholder="Search" />
-                        <Icon name="ios-people" />
-                    </Item>
-                    <Button transparent>
-                        <Text>Search</Text>
-                    </Button>
-                </Header>
-                </Container>
-        )
+    filterList(value) {
+        if (!_.isEmpty(_.toString(value))) {
+            this.setState({ full_list: this.state.dataList });
+            if (!_.isEmpty(_.toString(value))) {
+                data = _.filter(this.state.dataList, o => _.includes(o.ostan_name, value))
+                this.setState({ dataList: data, isLoading: false })
+            } else {
+                this.setState({ dataList: this.state.full_list });
+            }
+        }
     }
     //---------------------------------------------
     render() {
         return (
             <StyleProvider style={getTheme(platform)}>
-                <Container >
-                    <View style={globalStyle.globalStatusBar}></View>
-                    <Header style={{ direction: 'rtl' }}>
-                        <Left>
-                            <TouchableOpacity onPress={() => this.props.navigation.goBack()}>
-                                <Icon name="arrow-back" style={styles.backButton}></Icon>
-                            </TouchableOpacity>
-                        </Left>
-                        <Right>
-                            <Title>تعریف استان</Title>
-                        </Right>
-                    </Header>
-                    <Content>
+                <Container style={{ backgroundColor: theme.CONTAINER_COLOR }}>
 
+                    <MaterialHeader {...this.props} title='تعریف استان' />
+                    <Content padder>
                         <ModalSpinner isLoading={this.state.isLoading} />
+                        <Card>
+                            <CardItem bordered style={globalStyle.formRTL}>
+                                <MaterialInput {...this.props}
+                                    value={this.state.ostan_code}
+                                    label='کد استان:'
+                                    keyboardType="numeric"
+                                    iconName="number"
+                                    textAlign="center"
+                                    autoFocus={true}
+                                    onChangeText={(value) => this.setState({ ostan_code: value })}
+                                    onBlur={() => {
+                                        this.setState({
+                                            ostan_code_error: validator('ostan_code', this.state.ostan_code)
+                                        })
+                                    }}
+                                    error={this.state.ostan_code_error} />
+                                <Label style={globalStyle.error}>{this.state.ostan_code_error}</Label>
 
-                        <Form style={globalStyle.formRTL}>
-                            <Item floatingLabel style={[globalStyle.itemRTL, styles.inputNumber]}>
-                                <Icon type="SimpleLineIcons" name='home' style={globalStyle.inputIcon} />
-                                <Label>کد استان</Label>
-                                <Input keyboardType="numeric" style={globalStyle.inputNumber} onChangeText={(value) => this.setState({ ostan_code: value })} />
-                            </Item>
-                            <Item floatingLabel style={[globalStyle.itemRTL, styles.inputText]}>
-                                <Icon type="SimpleLineIcons" name='doc' style={globalStyle.inputIcon} />
-                                <Label>نام استان</Label>
-                                <Input style={globalStyle.inputText} onChangeText={(value) => this.setState({ ostan_name: value })} />
-                            </Item>
-                        </Form>
-                        <View style={{ paddingLeft: 20, paddingRight: 20 }}>
-                            <Button iconRight block style={styles.button} onPress={this.save}>
-                                <Text>{constant.SAVE_BUTTON_TEXT}</Text>
-                                <Icon type="MaterialIcons" name='save' />
-                            </Button>
-                        </View>
-                        <FlatList itemDivider style={{ paddingLeft: 8, paddingRight: 8 }}
-                            data={this.state.ostans}
-                            keyExtractor={item => item.ostan_code}
-                            ListHeaderComponent={this.renderHeader}
-                            renderItem={
-                                ({ item }) =>
-                                    <TouchableOpacity>
-                                        <View style={{
-                                            elevation: 1,
-                                            borderRadius: 2,
-                                            backgroundColor: '#F8F8F8',
-                                            flex: 1,
-                                            flexDirection: 'row-reverse',  // main axis
-                                            justifyContent: 'flex-start', // main axis
-                                            alignItems: 'center', // cross axis
-                                            paddingTop: 10,
-                                            paddingBottom: 10,
-                                            paddingLeft: 9,
-                                            paddingRight: 16,
-                                            marginLeft: 14,
-                                            marginRight: 14,
-                                            marginTop: 0,
-                                            marginBottom: 6,
-                                        }}>
-                                            <View style={styles.ostanCodeIcon}>
-                                                <IconMoon name="map-marker-alt" size={25}></IconMoon>
-                                            </View>
-                                            <View style={styles.ostanCodeStyle}>
-                                                <Text>{item.ostan_code}</Text>
-                                            </View>
-                                            <View style={styles.ostanNameStyle}>
-                                                <Text>{item.ostan_name}</Text>
-                                            </View>
-                                        </View>
-                                    </TouchableOpacity>
-                            }
-                        />
+                                <MaterialInput {...this.props}
+                                    value={this.state.ostan_name}
+                                    label='نام استان:'
+                                    iconName="document"
+                                    textAlign="right"
+                                    onChangeText={(value) => this.setState({ ostan_name: value })}
+                                    onBlur={() => {
+                                        this.setState({
+                                            ostan_name_error: validator('ostan_name', this.state.ostan_name)
+                                        })
+                                    }}
+                                    error={this.state.ostan_name_error} />
+                                <Label style={globalStyle.error}>{this.state.ostan_name_error}</Label>
 
+                                <Button iconRight full block style={styles.button}
+                                    onPress={this.save}>
+                                    <Text>{constant.SAVE_BUTTON_TEXT}</Text>
+                                    <Icon type="MaterialIcons" name='save' />
+                                </Button>
+                            </CardItem>
+                            <CardItem bordered>
+                                <FlatList itemDivider
+                                    data={this.state.dataList}
+                                    keyExtractor={item => item.ostan_code}
+                                    ListHeaderComponent={
+                                        <MaterialListHeader icon='map-marker-alt'
+                                            {...this.props}
+                                            onEndEditing={(e) => this.filterList(e.nativeEvent.text)}
+                                            title='جستجوی استان' />
+                                    }
+                                    renderItem={
+                                        ({ item, index }) =>
+                                            <TouchableOpacity onPress={this.selectRow(item, index)}>
+                                                <View style={globalStyle.listContainer}>
+                                                    <View style={styles.ostanCodeIcon}>
+                                                        <IconMoon name="map-marker-alt" size={25}></IconMoon>
+                                                    </View>
+                                                    <View style={styles.ostanCodeStyle}>
+                                                        <Text>{item.ostan_code}</Text>
+                                                    </View>
+                                                    <View style={styles.ostanNameStyle}>
+                                                        <Text>{item.ostan_name}</Text>
+                                                    </View>
+                                                </View>
+                                            </TouchableOpacity>
+                                    }
+                                />
+                            </CardItem>
+                        </Card>
                     </Content>
                 </Container>
             </StyleProvider>
@@ -147,15 +208,6 @@ export default class Ostan extends React.Component {
 }
 //-------------------------------------------------------------------------
 const styles = StyleSheet.create({
-    backButton: {
-        color: '#fff',
-    },
-    inputNumber: {
-        width: '40%'
-    },
-    inputText: {
-        width: '90%'
-    },
     button: {
         width: '100%',
         alignSelf: "center", marginTop: 10

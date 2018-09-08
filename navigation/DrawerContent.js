@@ -2,15 +2,9 @@ import React, { Component } from 'react';
 import { NavigationActions } from 'react-navigation';
 import { ScrollView, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { StyleProvider, Header, Text } from 'native-base';
-
 import PropTypes from 'prop-types';
-import globalStyle from '../styles/global';
-import getTheme from '../native-base-theme/components';
-import platform from '../native-base-theme/variables/platform';
 
-import { createIconSetFromIcoMoon } from 'react-native-vector-icons';
-import fontelloConfig from '../assets/svg/selection.json';
-const Icon = createIconSetFromIcoMoon(fontelloConfig);
+import { IconMoon, platform, getTheme, globalStyle } from '../index';
 //---------------------------------------------------------------------
 class DrawerContent extends Component {
     navigateToScreen = (route) => () => {
@@ -28,33 +22,33 @@ class DrawerContent extends Component {
                     <ScrollView>
                         <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Home')}>
                             <Text style={styles.menuItem}>صفحه اصلی</Text>
-                            <Icon name="home" style={styles.iconSize} />
+                            <IconMoon name="home" style={styles.iconSize} />
                         </TouchableOpacity>
                         <View style={globalStyle.divider}></View>
                         <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Ostan')}>
                             <Text style={styles.menuItem}>تعریف استان</Text>
-                            <Icon name="map-marker-alt" style={styles.iconSize} />
+                            <IconMoon name="map-marker-alt" style={styles.iconSize} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Home')}>
                             <Text style={styles.menuItem}>تعریف شهر</Text>
-                            <Icon name="map-marked-alt" style={styles.iconSize} />
+                            <IconMoon name="map-marked-alt" style={styles.iconSize} />
                         </TouchableOpacity>
                         <View style={globalStyle.divider}></View>
                         <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Home')}>
                             <Text style={styles.menuItem}>تعاریف اولیه مطب</Text>
-                            <Icon name="matab" style={styles.iconSize} />
+                            <IconMoon name="matab" style={styles.iconSize} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Home')}>
                             <Text style={styles.menuItem}>تعاریف تکمیلی مطب</Text>
-                            <Icon name="matab_more" style={styles.iconSize} />
+                            <IconMoon name="matab_more" style={styles.iconSize} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Home')}>
                             <Text style={styles.menuItem}>تعریف انواع پزشک</Text>
-                            <Icon name="user-md" style={styles.iconSize} />
+                            <IconMoon name="user-md" style={styles.iconSize} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Home')}>
                             <Text style={styles.menuItem}>تعریف انواع تخصص</Text>
-                            <Icon name="type_work" style={styles.iconSize} />
+                            <IconMoon name="type_work" style={styles.iconSize} />
                         </TouchableOpacity>
                     </ScrollView>
                 </View>

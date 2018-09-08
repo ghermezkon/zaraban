@@ -1,4 +1,7 @@
 export default{
     FONT_COLOR: '#37474F',
-    HEADER_COLOR: '#9C27B0'
+    HEADER_COLOR: '#9C27B0',
+    ICON_COLOR: '#CE93D8',
+    CONTAINER_COLOR: '#F8F8F8', 
+    ERROR_COLOR: '#d50000'
 };

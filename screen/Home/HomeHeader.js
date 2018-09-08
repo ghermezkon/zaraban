@@ -1,9 +1,7 @@
 import React from 'react';
 import { Header, View, Left, Button, Icon, Body, Right, Title, StyleProvider } from 'native-base';
 
-import globalStyle from '../../styles/global';
-import getTheme from '../../native-base-theme/components';
-import platform from '../../native-base-theme/variables/platform';
+import { globalStyle, getTheme, platform } from '../../index';
 //-------------------------------------------------------
 export default class HomeHeader extends React.Component {
     //---------------------------------------------------
