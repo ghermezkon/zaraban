@@ -13,7 +13,6 @@ export default class Ostan extends React.PureComponent {
     //---------------------------------------------    
     constructor(props) {
         super(props);
-        this.save = this.save.bind(this);
         this.state = {
             _id: '',
             ostan_code: '',
@@ -28,17 +27,13 @@ export default class Ostan extends React.PureComponent {
         }
     }
     //---------------------------------------------
-    componentWillMount() {
-        this.getAll();
-    }
-    //---------------------------------------------
-    getAll() {
+    componentDidMount() {
         fetch(httpApi.get_all_ostan).then((res) => res.json()).then((resJSON) => {
             this.setState({ dataList: resJSON, isLoading: false })
         })
     }
     //---------------------------------------------
-    save() {
+    save = () => {
         if (this.state.row_index != -1) {
             this.edit();
         }
@@ -54,12 +49,16 @@ export default class Ostan extends React.PureComponent {
                     this.setState({ isLoading: true });
                     fetch(httpApi.save, {
                         method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                        },
                         body: JSON.stringify({
                             ostan_code: this.state.ostan_code,
                             ostan_name: this.state.ostan_name
                         })
                     }).then((res) => res.json()).then((resJSON) => {
-                        this.setState({ dataList: [...this.state.dataList, resJSON.ops[0]] }, function () { this.resetForm() });
+                        this.setState({ dataList: [...this.state.dataList, resJSON] }, function () { this.resetForm() });
                         MaterialToast(constant.SAVE_OK_MSG, 'success')
                     })
                 }
@@ -67,7 +66,7 @@ export default class Ostan extends React.PureComponent {
         }
     }
     //---------------------------------------------
-    selectRow = (item, index) =>(e) => {
+    selectRow = (item, index) => (e) => {
         this.setState({
             _id: item._id,
             ostan_code: item.ostan_code,
@@ -76,7 +75,7 @@ export default class Ostan extends React.PureComponent {
         })
     }
     //---------------------------------------------
-    edit() {
+    edit = () => {
         let temp_list = [...this.state.dataList];
 
         let find_index = this.state.dataList.findIndex(el =>
@@ -87,12 +86,16 @@ export default class Ostan extends React.PureComponent {
             this.setState({ isLoading: true });
             fetch(httpApi.save, {
                 method: 'PUT',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
                     _id: this.state._id,
                     ostan_code: this.state.ostan_code,
                     ostan_name: this.state.ostan_name
                 })
-            }).then((res) => res.json()).then((resJSON) => {
+            }).then((res) => res.json()).then(() => {
 
                 temp_list[this.state.row_index]._id = this.state._id;
                 temp_list[this.state.row_index].ostan_code = this.state.ostan_code;
@@ -104,7 +107,7 @@ export default class Ostan extends React.PureComponent {
         }
     }
     //---------------------------------------------
-    resetForm(){
+    resetForm() {
         this.setState({
             ostan_code: '',
             ostan_name: '',
@@ -113,6 +116,7 @@ export default class Ostan extends React.PureComponent {
             isLoading: false
         })
     }
+    //---------------------------------------------
     filterList(value) {
         if (!_.isEmpty(_.toString(value))) {
             this.setState({ full_list: this.state.dataList });
@@ -135,15 +139,11 @@ export default class Ostan extends React.PureComponent {
                         <ModalSpinner isLoading={this.state.isLoading} />
                         <Card>
                             <CardItem bordered style={globalStyle.formRTL}>
-                                <MaterialInput {...this.props}
-                                    value={this.state.ostan_code}
-                                    label='کد استان:'
-                                    keyboardType="numeric"
-                                    iconName="number"
-                                    textAlign="center"
-                                    autoFocus={true}
+                                <MaterialInput value={this.state.ostan_code}
+                                    label='کد استان:' keyboardType="numeric"
+                                    iconName="number"  textAlign="center"
                                     onChangeText={(value) => this.setState({ ostan_code: value })}
-                                    onBlur={() => {
+                                    onEndEditing={() => {
                                         this.setState({
                                             ostan_code_error: validator('ostan_code', this.state.ostan_code)
                                         })
@@ -151,13 +151,10 @@ export default class Ostan extends React.PureComponent {
                                     error={this.state.ostan_code_error} />
                                 <Label style={globalStyle.error}>{this.state.ostan_code_error}</Label>
 
-                                <MaterialInput {...this.props}
-                                    value={this.state.ostan_name}
-                                    label='نام استان:'
-                                    iconName="document"
-                                    textAlign="right"
+                                <MaterialInput value={this.state.ostan_name}
+                                    label='نام استان:' iconName="document" textAlign="right"
                                     onChangeText={(value) => this.setState({ ostan_name: value })}
-                                    onBlur={() => {
+                                    onEndEditing={() => {
                                         this.setState({
                                             ostan_name_error: validator('ostan_name', this.state.ostan_name)
                                         })
@@ -165,24 +162,20 @@ export default class Ostan extends React.PureComponent {
                                     error={this.state.ostan_name_error} />
                                 <Label style={globalStyle.error}>{this.state.ostan_name_error}</Label>
 
-                                <Button iconRight full block style={styles.button}
-                                    onPress={this.save}>
+                                <Button iconRight block style={styles.button} onPress={this.save}>
                                     <Text>{constant.SAVE_BUTTON_TEXT}</Text>
                                     <Icon type="MaterialIcons" name='save' />
                                 </Button>
                             </CardItem>
                             <CardItem bordered>
-                                <FlatList itemDivider
-                                    data={this.state.dataList}
-                                    keyExtractor={item => item.ostan_code}
+                                <FlatList itemDivider data={this.state.dataList} keyExtractor={item => item.ostan_code}
                                     ListHeaderComponent={
                                         <MaterialListHeader icon='map-marker-alt'
                                             {...this.props}
                                             onEndEditing={(e) => this.filterList(e.nativeEvent.text)}
                                             title='جستجوی استان' />
                                     }
-                                    renderItem={
-                                        ({ item, index }) =>
+                                    renderItem={ ({ item, index }) =>
                                             <TouchableOpacity onPress={this.selectRow(item, index)}>
                                                 <View style={globalStyle.listContainer}>
                                                     <View style={styles.ostanCodeIcon}>
@@ -196,8 +189,8 @@ export default class Ostan extends React.PureComponent {
                                                     </View>
                                                 </View>
                                             </TouchableOpacity>
-                                    }
-                                />
+                                    }>
+                                </FlatList>
                             </CardItem>
                         </Card>
                     </Content>
