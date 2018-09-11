@@ -3,7 +3,7 @@ import { Header, View, Left, Button, Icon, Body, Right, Title, StyleProvider } f
 
 import { globalStyle, getTheme, platform } from '../../index';
 //-------------------------------------------------------
-export default class HomeHeader extends React.Component {
+export default class HomeHeader extends React.PureComponent {
     //---------------------------------------------------
     render() {
         return (

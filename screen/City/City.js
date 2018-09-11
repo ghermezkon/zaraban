@@ -1,37 +1,74 @@
 import React from 'react';
 
-import { Container, View, Text, Icon, StyleProvider, Content, Label, Button, Card, CardItem } from 'native-base';
+import { Container, View, Text, Icon, StyleProvider, Content, Label, Button, Card, CardItem, Item, Input } from 'native-base';
 import { StyleSheet, TouchableWithoutFeedback, FlatList } from 'react-native';
 
 import {
-    MaterialInput, MaterialToast, getTheme, platform, IconMoon,
+    MaterialInput, MaterialToast, getTheme, platform, IconMoon, 
     MaterialListHeader, constant, httpApi, ModalSpinner, validator, theme, globalStyle
 } from '../../index';
+import OstanModal from '../Modal/OstanModal'
 import _ from 'lodash';
 //-------------------------------------------------
-export default class Ostan extends React.Component {
+export default class City extends React.Component {
     //---------------------------------------------    
     constructor(props) {
         super(props);
         this.state = {
             _id: '',
-            ostan_code: '',
-            ostan_name: '',
+            city_code: '',
+            city_name: '',
+            ostan: {},
 
             dataList: [],
+            ostanList: [],
+
+            openOstanModal: false,
             isLoading: false,
-            ostan_code_error: null,
-            ostan_name_error: null,
+
+            city_code_error: null,
+            city_name_error: null,
+            ostan_error: null,
             row_index: -1,
             full_list: ''
         }
     }
     //---------------------------------------------
+    getCityOfOstan = async (value) => {
+        let parameter = '';
+        if (value.length == 0) parameter = this.state.ostan.ostan_name;
+        else parameter = value.ostan_name;
+
+        this.setState({ isLoading: true })
+        let res = await fetch(httpApi.get_city_of_ostan + parameter);
+        resJSON = await res.json();
+        
+        this.setState({ dataList: [...resJSON], isLoading: false })
+    }
+    //---------------------------------------------
+    ostanChange = async (value) => {
+        if (value.ostan_name != this.state.ostan.ostan_name) {
+            this.getCityOfOstan(value);
+            this.setState({
+                openOstanModal: false,
+                ostan: value,
+            })
+        } else {
+            this.setState({ isLoading: false, openOstanModal: false });
+        }
+    }
+    //---------------------------------------------
+    ostanClick = () => {
+        this.setState({ openOstanModal: true });
+    }
+    //---------------------------------------------
     componentDidMount() {
-        this.setState({ isLoading: true });
-        fetch(httpApi.get_all_ostan).then((res) => res.json()).then((resJSON) => {
-            this.setState({ dataList: resJSON, isLoading: false })
-        })
+        if (this.state.ostanList.length == 0) {
+            this.setState({ isLoading: true })
+            fetch(httpApi.get_all_ostan).then(res => res.json()).then(resJSON => {
+                this.setState({ ostanList: resJSON, isLoading: false })
+            })
+        }
     }
     //---------------------------------------------
     save = () => {
@@ -39,11 +76,12 @@ export default class Ostan extends React.Component {
             this.edit();
         }
         else {
-            if (this.state.ostan_code == '' || this.state.ostan_name == '') {
+            if (this.state.city_code == '' || this.state.city_name == '') {
                 MaterialToast(constant.FORM_INVALID, 'danger')
             } else {
-                let find_index = this.state.dataList.findIndex(el => el.ostan_code == this.state.ostan_code
-                    || el.ostan_name == this.state.ostan_name);
+                let find_index = this.state.dataList.findIndex(el =>
+                    (el.ostan.ostan_name == this.state.ostan.ostan_name && el.city_code == this.state.city_code) ||
+                    (el.ostan.ostan_name == this.state.ostan.ostan_name && el.city_name == this.state.city_name));
                 if (find_index != -1) {
                     MaterialToast(constant.DOUBLE_RECORD, 'warning');
                 } else {
@@ -55,8 +93,9 @@ export default class Ostan extends React.Component {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            ostan_code: this.state.ostan_code,
-                            ostan_name: this.state.ostan_name
+                            city_code: this.state.city_code,
+                            city_name: this.state.city_name,
+                            ostan: this.state.ostan
                         })
                     }).then((res) => res.json()).then((resJSON) => {
                         this.setState({ dataList: [...this.state.dataList, resJSON] }, function () { this.resetForm() });
@@ -70,14 +109,21 @@ export default class Ostan extends React.Component {
     selectRow = (item, index) => (e) => {
         this.setState({
             _id: item._id,
-            ostan_code: item.ostan_code,
-            ostan_name: item.ostan_name,
+            city_code: item.city_code,
+            city_name: item.city_name,
+            ostan: item.ostan,
             row_index: index
         })
     }
     //---------------------------------------------
-    edit = () => {
-        let temp_list = [...this.state.dataList];
+    edit = async () => {
+        let temp_list = [];
+        if (this.state.dataList.length > 0)
+            temp_list = [...this.state.dataList];
+        else {
+            const ostan = { _id: '', city_name: '', city_code: '', ostan: '' }
+            temp_list = [...ostan];
+        }
 
         let find_index = this.state.dataList.findIndex(el =>
             el.ostan_code == this.state.ostan_code || el.ostan_name == this.state.ostan_name);
@@ -93,27 +139,32 @@ export default class Ostan extends React.Component {
                 },
                 body: JSON.stringify({
                     _id: this.state._id,
-                    ostan_code: this.state.ostan_code,
-                    ostan_name: this.state.ostan_name
+                    city_code: this.state.city_code,
+                    city_name: this.state.city_name,
+                    ostan: this.state.ostan
                 })
             }).then((res) => res.json()).then(() => {
-
-                temp_list[this.state.row_index]._id = this.state._id;
-                temp_list[this.state.row_index].ostan_code = this.state.ostan_code;
-                temp_list[this.state.row_index].ostan_name = this.state.ostan_name;
-
-                this.setState({ dataList: [...temp_list] }, function () { this.resetForm() });
+                if (this.state.dataList.length > 0) {
+                    temp_list[this.state.row_index]._id = this.state._id;
+                    temp_list[this.state.row_index].city_code = this.state.city_code;
+                    temp_list[this.state.row_index].city_name = this.state.city_name;
+                    temp_list[this.state.row_index].ostan = this.state.ostan;
+                    this.setState({ dataList: [...temp_list] });
+                } else {
+                    this.getCityOfOstan('');
+                }
+                this.resetForm();
                 MaterialToast(constant.UPDATE_OK_MSG, 'success')
             })
         }
     }
     //---------------------------------------------
-    resetForm() {
+    resetForm = () => {
         this.setState({
-            ostan_code: '',
-            ostan_name: '',
-            ostan_code_error: null,
-            ostan_name_error: null,
+            city_code: '',
+            city_name: '',
+            city_code_error: null,
+            city_name_error: null,
             isLoading: false,
             row_index: -1
         })
@@ -123,7 +174,7 @@ export default class Ostan extends React.Component {
         if (!_.isEmpty(_.toString(value))) {
             this.setState({ full_list: this.state.dataList });
             if (!_.isEmpty(_.toString(value))) {
-                data = _.filter(this.state.dataList, o => _.includes(o.ostan_name, value))
+                data = _.filter(this.state.dataList, o => _.includes(o.city_name, value))
                 this.setState({ dataList: data, isLoading: false })
             } else {
                 this.setState({ dataList: this.state.full_list });
@@ -135,34 +186,45 @@ export default class Ostan extends React.Component {
         return (
             <StyleProvider style={getTheme(platform)}>
                 <Container style={{ backgroundColor: theme.CONTAINER_COLOR }}>
-
+                    {this.state.openOstanModal ?
+                        <OstanModal
+                            ostanList={this.state.ostanList}
+                            ostanSelect={this.state.ostan}
+                            openOstanModal={this.state.openOstanModal}
+                            ostanChange={this.ostanChange} /> : null}
+                    {this.state.isLoading ?
+                        <ModalSpinner isLoading={this.state.isLoading} /> : null}
                     <Content padder>
-                        {this.state.isLoading ?
-                            <ModalSpinner isLoading={this.state.isLoading} /> : null}
                         <Card>
                             <CardItem bordered style={globalStyle.formRTL}>
-                                <MaterialInput value={this.state.ostan_code}
-                                    label='کد استان:' keyboardType="numeric"
-                                    iconName="number" textAlign="center"
-                                    onChangeText={(value) => this.setState({ ostan_code: value })}
-                                    onEndEditing={() => {
-                                        this.setState({
-                                            ostan_code_error: validator('ostan_code', this.state.ostan_code)
-                                        })
-                                    }}
-                                    error={this.state.ostan_code_error} />
-                                <Label style={globalStyle.error}>{this.state.ostan_code_error}</Label>
+                                <MaterialInput showButton={true} disabled={true}
+                                    value={this.state.ostan.ostan_name}
+                                    buttonPress={this.ostanClick}
+                                    placeholder='-- انتخاب استان --'
+                                    label='نام استان:' iconName="map-marker-alt" textAlign="center" />
 
-                                <MaterialInput value={this.state.ostan_name}
-                                    label='نام استان:' iconName="document" textAlign="right"
-                                    onChangeText={(value) => this.setState({ ostan_name: value })}
+                                <MaterialInput value={this.state.city_code}
+                                    label='کد شهر:' keyboardType="numeric"
+                                    iconName="number" textAlign="center"
+                                    onChangeText={(value) => this.setState({ city_code: value })}
                                     onEndEditing={() => {
                                         this.setState({
-                                            ostan_name_error: validator('ostan_name', this.state.ostan_name)
+                                            city_code_error: validator('city_code', this.state.city_code)
                                         })
                                     }}
-                                    error={this.state.ostan_name_error} />
-                                <Label style={globalStyle.error}>{this.state.ostan_name_error}</Label>
+                                    error={this.state.city_code_error} />
+                                <Label style={globalStyle.error}>{this.state.city_code_error}</Label>
+
+                                <MaterialInput value={this.state.city_name}
+                                    label='نام شهر:' iconName="document" textAlign="right"
+                                    onChangeText={(value) => this.setState({ city_name: value })}
+                                    onEndEditing={() => {
+                                        this.setState({
+                                            city_name_error: validator('city_name', this.state.city_name)
+                                        })
+                                    }}
+                                    error={this.state.city_name_error} />
+                                <Label style={globalStyle.error}>{this.state.city_name_error}</Label>
 
                                 <Button iconRight block style={styles.button} onPress={this.save}>
                                     <Text>{constant.SAVE_BUTTON_TEXT}</Text>
@@ -170,25 +232,25 @@ export default class Ostan extends React.Component {
                                 </Button>
                             </CardItem>
                             <CardItem bordered>
-                                {this.state.dataList.length ?
-                                    <FlatList itemDivider data={this.state.dataList} keyExtractor={item => item.ostan_code}
+                                {this.state.dataList.length > 0 ?
+                                    <FlatList itemDivider data={this.state.dataList} keyExtractor={item => item.city_code}
                                         ListHeaderComponent={
-                                            <MaterialListHeader icon='map-marker-alt'
+                                            <MaterialListHeader icon='map-marked-alt'
                                                 {...this.props}
                                                 onEndEditing={(e) => this.filterList(e.nativeEvent.text)}
-                                                title='جستجوی استان' />
+                                                title='جستجوی شهر' />
                                         }
                                         renderItem={({ item, index }) =>
                                             <TouchableWithoutFeedback onPress={this.selectRow(item, index)}>
                                                 <View style={globalStyle.listContainer}>
                                                     <View style={styles.ostanCodeIcon}>
-                                                        <IconMoon name="map-marker-alt" size={25}></IconMoon>
+                                                        <IconMoon name="map-marked-alt" size={20}></IconMoon>
                                                     </View>
                                                     <View style={styles.ostanCodeStyle}>
-                                                        <Text>{item.ostan_code}</Text>
+                                                        <Text>{item.city_code}</Text>
                                                     </View>
                                                     <View style={styles.ostanNameStyle}>
-                                                        <Text>{item.ostan_name}</Text>
+                                                        <Text>{item.city_name}</Text>
                                                     </View>
                                                 </View>
                                             </TouchableWithoutFeedback>

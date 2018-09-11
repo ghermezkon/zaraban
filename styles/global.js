@@ -56,6 +56,21 @@ const styles = StyleSheet.create({
         marginRight: 1,
         marginTop: 0,
         marginBottom: 6,
+    },
+    //-------------------------Modal----------------------------------
+    modalShadow: {
+        // ios
+        shadowColor: '#03A9F4',
+        alignItems: 'center',
+        shadowOffset: { width: 0, height: 13 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        // android (Android +5.0)
+        elevation: 2,
+    },
+    modalContainer: {
+        opacity: 1, padding: 5, justifyContent: 'center',
+        alignItems: 'center', backgroundColor: theme.MODAL_COLOR, borderRadius: 10
     }
 });
 export default styles;

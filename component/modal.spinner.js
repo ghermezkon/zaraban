@@ -1,10 +1,10 @@
 import React from 'react';
-import { theme } from '../index';
+import { theme, globalStyle } from '../index';
 import { View, Modal, StyleSheet } from 'react-native';
 import { UIActivityIndicator } from 'react-native-indicators';
 import { Text } from 'native-base';
 //-------------------------------------------------------
-export default class ModalSpinner extends React.Component {
+export default class ModalSpinner extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
@@ -16,10 +16,6 @@ export default class ModalSpinner extends React.Component {
         this.setState({
             isLoading: nextProps['isLoading']
         })
-    }
-    //---------------------------------------------------
-    shouldComponentUpdate(nextProps, nextState) {
-        return true;
     }
     //---------------------------------------------------
     render() {
@@ -35,7 +31,7 @@ export default class ModalSpinner extends React.Component {
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}>
-                    <View style={[styles.container, styles.shadow]}>
+                    <View style={[styles.container, globalStyle.modalShadow, globalStyle.modalContainer]}>
                         <UIActivityIndicator size={40} color={theme.HEADER_COLOR} />
                         <Text style={{ marginTop: 30 }}>لطفاً صبر کنید ...</Text>
                     </View>
@@ -47,17 +43,6 @@ export default class ModalSpinner extends React.Component {
 }
 const styles = StyleSheet.create({
     container: {
-        width: 200, height: 110, opacity: 1, padding: 30, justifyContent: 'center',
-        alignItems: 'center', backgroundColor: '#f7f7f7', borderRadius: 10
-    },
-    shadow: {
-        // ios
-        shadowColor: '#03A9F4',
-        alignItems: 'center',
-        shadowOffset: { width: 0, height: 13 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        // android (Android +5.0)
-        elevation: 2,
+        width: 200, height: 110
     }
 })

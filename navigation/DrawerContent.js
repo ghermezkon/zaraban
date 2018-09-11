@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { NavigationActions } from 'react-navigation';
 import { ScrollView, View, TouchableOpacity, StyleSheet } from 'react-native';
-import { StyleProvider, Header, Text } from 'native-base';
+import { StyleProvider, Header, Text, Button } from 'native-base';
 import PropTypes from 'prop-types';
 
 import { IconMoon, platform, getTheme, globalStyle } from '../index';
@@ -29,7 +29,7 @@ class DrawerContent extends Component {
                             <Text style={styles.menuItem}>تعریف استان</Text>
                             <IconMoon name="map-marker-alt" style={styles.iconSize} />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('Home')}>
+                        <TouchableOpacity style={styles.menuContainer} onPress={this.navigateToScreen('City')}>
                             <Text style={styles.menuItem}>تعریف شهر</Text>
                             <IconMoon name="map-marked-alt" style={styles.iconSize} />
                         </TouchableOpacity>

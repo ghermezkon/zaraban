@@ -2,7 +2,9 @@ import validatejs from 'validate.js';
 //------------------------------------------------------------
 const validation = {
     ostan_code: { presence: { message: '^*الزامی', allowEmpty: false } },
-    ostan_name: { presence: { message: '^*الزامی', allowEmpty: false } }
+    ostan_name: { presence: { message: '^*الزامی', allowEmpty: false } },
+    city_code: { presence: { message: '^*الزامی', allowEmpty: false } },
+    city_name: { presence: { message: '^*الزامی', allowEmpty: false } }
 }
 function validator(fieldName, value) {
     var formValues = {}

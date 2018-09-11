@@ -13,7 +13,7 @@ const MaterialListHeader = ({ icon, title, onEndEditing, ...props }) => {
                     <Input placeholder={title}
                         style={{ textAlign: 'right', direction: 'rtl', fontFamily: 'font-number' }}
                         onEndEditing={onEndEditing} />
-                    <IconMoon name={icon} style={{ padding: 5, fontSize: 24 }} />
+                    <IconMoon name={icon} style={{ padding: 5, fontSize: 22, color: theme.ICON_COLOR }} />
                 </Item>
             </Header>
         </View>
